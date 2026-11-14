@@ -39,7 +39,7 @@ pipeline {
             steps {
                 withCredentials([
                     sshUserPrivateKey(
-                        credentialsId: 'staging-deploy-key-v2',
+                        credentialsId: 'staging-ssh-key-v2',
                         keyFileVariable: 'SSH_KEY',
                         usernameVariable: 'SSH_USER'
                     )
