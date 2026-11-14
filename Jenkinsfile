@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        STAGING_HOST = '16.4.140.8'
+        STAGING_HOST = '172.31.14.45'
     }
 
     stages {
