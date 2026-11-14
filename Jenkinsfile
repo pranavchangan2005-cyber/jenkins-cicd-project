@@ -5,6 +5,10 @@ pipeline {
         maven 'Maven-3.9.12'
     }
 
+    environment {
+        STAGING_HOST = '16.4.140.8'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -30,14 +34,42 @@ pipeline {
                                  fingerprint: true
             }
         }
+
+        stage('Deploy to Staging') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'staging-deploy-key-v2',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    )
+                ]) {
+                    sh '''
+                        mkdir -p ~/.ssh
+                        chmod 700 ~/.ssh
+
+                        ssh-keyscan -H "$STAGING_HOST" >> ~/.ssh/known_hosts
+                        chmod 600 ~/.ssh/known_hosts
+
+                        scp -i "$SSH_KEY" \
+                            target/jenkins-cicd-project-1.0-SNAPSHOT.jar \
+                            "$SSH_USER@$STAGING_HOST:/home/ubuntu/jenkins-cicd-project.jar"
+
+                        ssh -i "$SSH_KEY" \
+                            "$SSH_USER@$STAGING_HOST" \
+                            'java -cp /home/ubuntu/jenkins-cicd-project.jar com.example.App'
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'CI Pipeline completed successfully!'
+            echo 'CI/CD Pipeline completed successfully!'
         }
         failure {
-            echo 'CI Pipeline failed. Check the console output.'
+            echo 'CI/CD Pipeline failed. Check the console output.'
         }
-    }
+   }
 }
